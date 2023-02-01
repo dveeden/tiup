@@ -67,6 +67,7 @@ type Playground struct {
 	tikvCdcs         []*instance.TiKVCDC
 	pumps            []*instance.Pump
 	drainers         []*instance.Drainer
+	dms              []*instance.DM
 	startedInstances []instance.Instance
 
 	idAlloc        map[string]int
@@ -316,6 +317,12 @@ func (p *Playground) handleScaleIn(w io.Writer, pid int) error {
 				p.tikvCdcs = append(p.tikvCdcs[:i], p.tikvCdcs[i+1:]...)
 			}
 		}
+	case spec.ComponentDMWorker:
+		for i := 0; i < len(p.dms); i++ {
+			if p.dms[i].Pid() == pid {
+				p.dms = append(p.dms[:i], p.dms[i+1:]...)
+			}
+		}
 	case spec.ComponentTiFlash:
 		for i := 0; i < len(p.tiflashs); i++ {
 			if p.tiflashs[i].Pid() == pid {
@@ -422,6 +429,8 @@ func (p *Playground) sanitizeComponentConfig(cid string, cfg *instance.Config) e
 		return p.sanitizeConfig(p.bootOptions.Pump, cfg)
 	case spec.ComponentDrainer:
 		return p.sanitizeConfig(p.bootOptions.Drainer, cfg)
+	case spec.ComponentDMWorker:
+		return p.sanitizeConfig(p.bootOptions.DM, cfg)
 	default:
 		return fmt.Errorf("unknown %s in sanitizeConfig", cid)
 	}
@@ -617,6 +626,13 @@ func (p *Playground) WalkInstances(fn func(componentID string, ins instance.Inst
 		}
 	}
 
+	for _, ins := range p.dms {
+		err := fn(spec.ComponentDMWorker, ins)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, ins := range p.tiflashs {
 		err := fn(spec.ComponentTiFlash, ins)
 		if err != nil {
@@ -699,6 +715,10 @@ func (p *Playground) addInstance(componentID string, cfg instance.Config) (ins i
 		inst := instance.NewDrainer(cfg.BinPath, dir, host, cfg.ConfigPath, id, p.pds)
 		ins = inst
 		p.drainers = append(p.drainers, inst)
+	case spec.ComponentDMWorker:
+		inst := instance.NewDM(cfg.BinPath, dir, host, cfg.ConfigPath, id, p.pds)
+		ins = inst
+		p.dms = append(p.dms, inst)
 	default:
 		return nil, errors.Errorf("unknown component: %s", componentID)
 	}
@@ -803,6 +823,7 @@ func (p *Playground) bootCluster(ctx context.Context, env *environment.Environme
 		&options.TiFlash,
 		&options.Pump,
 		&options.Drainer,
+		&options.DM,
 		&options.TiKVCDC,
 	} {
 		path, err := getAbsolutePath(cfg.ConfigPath)
@@ -841,6 +862,7 @@ func (p *Playground) bootCluster(ctx context.Context, env *environment.Environme
 		{spec.ComponentCDC, options.TiCDC},
 		{spec.ComponentTiKVCDC, options.TiKVCDC},
 		{spec.ComponentDrainer, options.Drainer},
+		{spec.ComponentDMWorker, options.DM},
 		{spec.ComponentTiFlash, options.TiFlash},
 	}
 
@@ -1039,6 +1061,11 @@ func (p *Playground) terminate(sig syscall.Signal) {
 		}
 	}
 	for _, inst := range p.drainers {
+		if inst.Process != nil && inst.Process.Cmd() != nil && inst.Process.Cmd().Process != nil {
+			kill(inst.Component(), inst.Pid(), inst.Wait)
+		}
+	}
+	for _, inst := range p.dms {
 		if inst.Process != nil && inst.Process.Cmd() != nil && inst.Process.Cmd().Process != nil {
 			kill(inst.Component(), inst.Pid(), inst.Wait)
 		}

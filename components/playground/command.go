@@ -58,6 +58,7 @@ func buildCommands(tp CommandType, opt *BootOptions) (cmds []Command) {
 		{"ticdc", opt.TiCDC},
 		{"tikv-cdc", opt.TiKVCDC},
 		{"drainer", opt.Drainer},
+		{"dm", opt.DM},
 	}
 
 	for _, cmd := range commands {
@@ -102,6 +103,7 @@ func newScaleOut() *cobra.Command {
 	cmd.Flags().IntVarP(&opt.TiKVCDC.Num, "kvcdc", "", opt.TiKVCDC.Num, "TiKV-CDC instance number")
 	cmd.Flags().IntVarP(&opt.Pump.Num, "pump", "", opt.Pump.Num, "Pump instance number")
 	cmd.Flags().IntVarP(&opt.Drainer.Num, "drainer", "", opt.Pump.Num, "Drainer instance number")
+	cmd.Flags().IntVarP(&opt.DM.Num, "dm", "", opt.DM.Num, "DM instance number")
 
 	cmd.Flags().StringVarP(&opt.TiDB.Host, "db.host", "", opt.TiDB.Host, "Playground TiDB host. If not provided, TiDB will still use `host` flag as its host")
 	cmd.Flags().StringVarP(&opt.PD.Host, "pd.host", "", opt.PD.Host, "Playground PD host. If not provided, PD will still use `host` flag as its host")
@@ -112,6 +114,7 @@ func newScaleOut() *cobra.Command {
 	cmd.Flags().StringVarP(&opt.TiFlash.ConfigPath, "tiflash.config", "", opt.TiFlash.ConfigPath, "TiFlash instance configuration file")
 	cmd.Flags().StringVarP(&opt.Pump.ConfigPath, "pump.config", "", opt.Pump.ConfigPath, "Pump instance configuration file")
 	cmd.Flags().StringVarP(&opt.Drainer.ConfigPath, "drainer.config", "", opt.Drainer.ConfigPath, "Drainer instance configuration file")
+	cmd.Flags().StringVarP(&opt.DM.ConfigPath, "dm.config", "", opt.DM.ConfigPath, "DM instance configuration file")
 
 	cmd.Flags().StringVarP(&opt.TiDB.BinPath, "db.binpath", "", opt.TiDB.BinPath, "TiDB instance binary path")
 	cmd.Flags().StringVarP(&opt.TiKV.BinPath, "kv.binpath", "", opt.TiKV.BinPath, "TiKV instance binary path")
@@ -121,6 +124,7 @@ func newScaleOut() *cobra.Command {
 	cmd.Flags().StringVarP(&opt.TiKVCDC.BinPath, "kvcdc.binpath", "", opt.TiKVCDC.BinPath, "TiKVCDC instance binary path")
 	cmd.Flags().StringVarP(&opt.Pump.BinPath, "pump.binpath", "", opt.Pump.BinPath, "Pump instance binary path")
 	cmd.Flags().StringVarP(&opt.Drainer.BinPath, "drainer.binpath", "", opt.Drainer.BinPath, "Drainer instance binary path")
+	cmd.Flags().StringVarP(&opt.DM.BinPath, "dm.binpath", "", opt.DM.BinPath, "DM instance binary path")
 
 	return cmd
 }

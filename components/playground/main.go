@@ -63,6 +63,7 @@ type BootOptions struct {
 	TiKVCDC instance.Config `yaml:"tikv_cdc"`
 	Pump    instance.Config `yaml:"pump"`
 	Drainer instance.Config `yaml:"drainer"`
+	DM      instance.Config `yaml:"dm"`
 	Host    string          `yaml:"host"`
 	Monitor bool            `yaml:"monitor"`
 }
@@ -93,6 +94,7 @@ const (
 	kvcdc   = "kvcdc"
 	pump    = "pump"
 	drainer = "drainer"
+	dm      = "dm"
 
 	// up timeouts
 	dbTimeout      = "db.timeout"
@@ -114,6 +116,7 @@ const (
 	kvcdcConfig   = "kvcdc.config"
 	pumpConfig    = "pump.config"
 	drainerConfig = "drainer.config"
+	dmConfig      = "dm.config"
 
 	// binary path
 	dbBinpath      = "db.binpath"
@@ -124,6 +127,7 @@ const (
 	kvcdcBinpath   = "kvcdc.binpath"
 	pumpBinpath    = "pump.binpath"
 	drainerBinpath = "drainer.binpath"
+	dmBinpath      = "dm.binpath"
 
 	// component version
 	kvcdcVersion = "kvcdc.version"
@@ -329,6 +333,7 @@ If you'd like to use a TiDB version other than %s, cancel and retry with the fol
 	rootCmd.Flags().Int(kvcdc, defaultOptions.TiKVCDC.Num, "TiKV-CDC instance number")
 	rootCmd.Flags().Int(pump, defaultOptions.Pump.Num, "Pump instance number")
 	rootCmd.Flags().Int(drainer, defaultOptions.Drainer.Num, "Drainer instance number")
+	rootCmd.Flags().Int(dm, defaultOptions.DM.Num, "DM instance number")
 
 	rootCmd.Flags().Int(dbTimeout, defaultOptions.TiDB.UpTimeout, "TiDB max wait time in seconds for starting, 0 means no limit")
 	rootCmd.Flags().Int(tiflashTimeout, defaultOptions.TiFlash.UpTimeout, "TiFlash max wait time in seconds for starting, 0 means no limit")
@@ -345,6 +350,7 @@ If you'd like to use a TiDB version other than %s, cancel and retry with the fol
 	rootCmd.Flags().String(tiflashConfig, defaultOptions.TiDB.ConfigPath, "TiFlash instance configuration file")
 	rootCmd.Flags().String(pumpConfig, defaultOptions.Pump.ConfigPath, "Pump instance configuration file")
 	rootCmd.Flags().String(drainerConfig, defaultOptions.Drainer.ConfigPath, "Drainer instance configuration file")
+	rootCmd.Flags().String(dmConfig, defaultOptions.DM.ConfigPath, "DM instance configuration file")
 	rootCmd.Flags().String(ticdcConfig, defaultOptions.TiCDC.ConfigPath, "TiCDC instance configuration file")
 	rootCmd.Flags().String(kvcdcConfig, defaultOptions.TiKVCDC.ConfigPath, "TiKV-CDC instance configuration file")
 
@@ -356,6 +362,7 @@ If you'd like to use a TiDB version other than %s, cancel and retry with the fol
 	rootCmd.Flags().String(kvcdcBinpath, defaultOptions.TiKVCDC.BinPath, "TiKV-CDC instance binary path")
 	rootCmd.Flags().String(pumpBinpath, defaultOptions.Pump.BinPath, "Pump instance binary path")
 	rootCmd.Flags().String(drainerBinpath, defaultOptions.Drainer.BinPath, "Drainer instance binary path")
+	rootCmd.Flags().String(dmBinpath, defaultOptions.DM.BinPath, "DM instance binary path")
 
 	rootCmd.Flags().String(kvcdcVersion, defaultOptions.TiKVCDC.Version, "TiKV-CDC instance version")
 
@@ -445,6 +452,11 @@ func populateOpt(flagSet *pflag.FlagSet) (err error) {
 			if err != nil {
 				return
 			}
+		case dm:
+			options.DM.Num, err = strconv.Atoi(flag.Value.String())
+			if err != nil {
+				return
+			}
 
 		case dbConfig:
 			options.TiDB.ConfigPath = flag.Value.String()
@@ -462,6 +474,8 @@ func populateOpt(flagSet *pflag.FlagSet) (err error) {
 			options.Pump.ConfigPath = flag.Value.String()
 		case drainerConfig:
 			options.Drainer.ConfigPath = flag.Value.String()
+		case dmConfig:
+			options.DM.ConfigPath = flag.Value.String()
 
 		case dbBinpath:
 			options.TiDB.BinPath = flag.Value.String()
@@ -479,6 +493,8 @@ func populateOpt(flagSet *pflag.FlagSet) (err error) {
 			options.Pump.BinPath = flag.Value.String()
 		case drainerBinpath:
 			options.Drainer.BinPath = flag.Value.String()
+		case dmBinpath:
+			options.DM.BinPath = flag.Value.String()
 
 		case dbTimeout:
 			options.TiDB.UpTimeout, err = strconv.Atoi(flag.Value.String())
